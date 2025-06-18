@@ -1,6 +1,6 @@
-from django.shortcuts import render, redirect
-from .models import Location
-from .utils import fetch_and_store_forecast
+from django.shortcuts import render, redirect, get_object_or_404
+from .models import Location, WeatherForecast
+from .utils import fetch_and_store_forecast, get_current_weather
 
 def weathermap(request):
     return render(request, 'mainapp/weathermap.html')
@@ -25,6 +25,21 @@ def location_add(request):
     return render(request, 'mainapp/add_location.html')
 
 def delete_location(request, location_id):
-    location = Location.objects.get(id=location_id)
+    location = get_object_or_404(Location, id=location_id, user=request.user)
     location.delete()
     return redirect('locations')
+
+def get_location(request, location_id):
+    location = get_object_or_404(Location, id=location_id, user=request.user)
+    lat, lon = location.point.x, location.point.y
+    current_data = get_current_weather(lat, lon)
+    print(current_data)
+    forecast_data = WeatherForecast.objects.filter(location=location)
+    context = {
+        'location':location,
+        'lat': lat,
+        'lon': lon,
+        'current_data': current_data,
+        'forecast_data':forecast_data,
+    }
+    return render(request, 'mainapp/location_detail.html', context)

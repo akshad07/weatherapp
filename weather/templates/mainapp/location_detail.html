@@ -1,0 +1,246 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}Location Detail{% endblock %}
+
+{% block extra_head %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+    .back-button {
+        position: fixed;
+        top: 60px;
+        left: 20px;
+        z-index: 2000;
+        padding: 8px 16px;
+        font-size: 16px;
+        border-radius: 8px;
+    }
+</style>
+
+{% endblock %}
+
+{% block content %}
+<a href="{% url 'locations' %}" class="btn btn-primary back-button">
+    ← Back
+</a>
+<br>
+<div class="container-fluid py-3 mt-2">
+    <div class="row g-3">
+        <!-- Map -->
+        <div class="col-md-4">
+            <div id="map" style="height: 355px; border-radius: 8px;"></div>
+        </div>
+
+        <!-- Current Weather -->
+        <div class="col-md-8">
+           <div class="row g-3">
+
+    <!-- Temperature -->
+    <div class="col-md-4 fade-in-up" style="animation-delay: 0.1s;">
+        <div class="card h-100 detail-card">
+            <div class="card-body text-center">
+                <h6 class="card-title text-muted">Temperature</h6>
+                <i class="fas fa-thermometer-half fa-2x text-danger mb-2"></i>
+                <div class="h4">{{ current_data.temperature }} °C</div>
+                <div class="small text-muted">Feels like: {{ current_data.feels_like }} °C</div>
+                <div class="small text-muted">Min: {{ current_data.temp_min }} °C | Max: {{ current_data.temp_max }} °C</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Humidity & Pressure -->
+    <div class="col-md-4 fade-in-up" style="animation-delay: 0.2s;">
+        <div class="card h-100 detail-card">
+            <div class="card-body text-center">
+                <h6 class="card-title text-muted">Humidity & Pressure</h6>
+                <i class="fas fa-tint fa-2x text-info mb-2"></i>
+                <div class="h4">{{ current_data.humidity }}% / {{ current_data.pressure }} hPa</div>
+                <div class="small text-muted">Relative humidity / Atmospheric pressure</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wind -->
+    <div class="col-md-4 fade-in-up" style="animation-delay: 0.3s;">
+        <div class="card h-100 detail-card">
+            <div class="card-body text-center">
+                <h6 class="card-title text-muted">Wind</h6>
+                <i class="fas fa-wind fa-2x text-dark mb-2"></i>
+                <div class="h4">{{ current_data.wind_speed }} m/s</div>
+                <div class="small text-muted">Direction: {{ current_data.wind_deg }}°</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Clouds & Visibility -->
+    <div class="col-md-6 fade-in-up" style="animation-delay: 0.4s;">
+        <div class="card h-100 detail-card">
+            <div class="card-body text-center">
+                <h6 class="card-title text-muted">Clouds & Visibility</h6>
+                <i class="fas fa-cloud fa-2x text-secondary mb-2"></i>
+                <div class="h4">{{ current_data.clouds }}% / {{ current_data.visibility }} m</div>
+                <div class="small text-muted">Cloud coverage / Visibility</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sunrise & Sunset -->
+    <div class="col-md-6 fade-in-up" style="animation-delay: 0.5s;">
+        <div class="card h-100 detail-card">
+            <div class="card-body text-center">
+                <h6 class="card-title text-muted">Sunrise & Sunset</h6>
+                <i class="fas fa-sun fa-2x text-warning mb-2"></i>
+                <div class="h4">
+                    {{ current_data.sunrise }} / {{ current_data.sunset }}
+                </div>
+                <div class="small text-muted">Sunrise / Sunset (UTC)</div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+        </div>
+    </div>
+
+   <div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card shadow-sm">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">5-Day Forecast</h5>
+                <select id="forecastFieldSelector" class="form-select w-auto">
+                    <option value="temp">Temperature (°C)</option>
+                    <option value="feels_like">Feels Like (°C)</option>
+                    <option value="temp_min">Temp Min (°C)</option>
+                    <option value="temp_max">Temp Max (°C)</option>
+                    <option value="humidity">Humidity (%)</option>
+                    <option value="pressure">Pressure (hPa)</option>
+                    <option value="clouds">Clouds (%)</option>
+                    <option value="wind_speed">Wind Speed (m/s)</option>
+                    <option value="wind_deg">Wind Degree (°)</option>
+                    <option value="visibility">Visibility (m)</option>
+                    <option value="pop">POP (%)</option>
+                    <option value="rain_3h">Rain (3h mm)</option>
+                </select>
+            </div>
+            <div class="card-body">
+                <canvas id="forecastChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<script>
+    // Init Leaflet map
+    const map = L.map('map').setView([{{ lon }}, {{ lat }}], 10);
+L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Tiles &copy; Esri — Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community',
+  maxZoom: 18
+}).addTo(map);
+// Overlay labels (city names, roads, etc.)
+L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}', {
+  attribution: 'Labels &copy; Esri',
+  maxZoom: 18
+}).addTo(map);
+    L.marker([{{ lon }}, {{ lat }}]).addTo(map)
+        .bindPopup("{{ location.name }}")
+        .openPopup();
+</script>
+
+<script>
+    const labels = [
+        {% for point in forecast_data %}
+            "{{ point.datetime|date:'D H:i' }}",
+        {% endfor %}
+    ];
+
+    const allData = {
+        temp: [{% for p in forecast_data %}{{ p.temp|default:'null' }},{% endfor %}],
+        feels_like: [{% for p in forecast_data %}{{ p.feels_like|default:'null' }},{% endfor %}],
+        temp_min: [{% for p in forecast_data %}{{ p.temp_min|default:'null' }},{% endfor %}],
+        temp_max: [{% for p in forecast_data %}{{ p.temp_max|default:'null' }},{% endfor %}],
+        humidity: [{% for p in forecast_data %}{{ p.humidity|default:'null' }},{% endfor %}],
+        pressure: [{% for p in forecast_data %}{{ p.pressure|default:'null' }},{% endfor %}],
+        clouds: [{% for p in forecast_data %}{{ p.clouds|default:'null' }},{% endfor %}],
+        wind_speed: [{% for p in forecast_data %}{{ p.wind_speed|default:'null' }},{% endfor %}],
+        wind_deg: [{% for p in forecast_data %}{{ p.wind_deg|default:'null' }},{% endfor %}],
+        visibility: [{% for p in forecast_data %}{{ p.visibility|default:'null' }},{% endfor %}],
+        pop: [{% for p in forecast_data %}{{ p.pop|default:'null' }},{% endfor %}],
+        rain_3h: [{% for p in forecast_data %}{{ p.rain_3h|default:'null' }},{% endfor %}]
+    };
+
+    const fieldLabels = {
+        temp: "Temperature (°C)",
+        feels_like: "Feels Like (°C)",
+        temp_min: "Temp Min (°C)",
+        temp_max: "Temp Max (°C)",
+        humidity: "Humidity (%)",
+        pressure: "Pressure (hPa)",
+        clouds: "Clouds (%)",
+        wind_speed: "Wind Speed (m/s)",
+        wind_deg: "Wind Degree (°)",
+        visibility: "Visibility (m)",
+        pop: "POP (%)",
+        rain_3h: "Rain (3h mm)"
+    };
+const colors = [
+    'rgba(255, 99, 132, 1)',
+    'rgba(54, 162, 235, 1)',
+    'rgba(255, 206, 86, 1)',
+    'rgba(75, 192, 192, 1)',
+    'rgba(153, 102, 255, 1)',
+    'rgb(255, 0, 0)',
+    'rgba(199, 199, 199, 1)',
+    'rgb(37, 52, 100)',
+    'rgba(255, 99, 71, 1)',
+    'rgba(60, 179, 113, 1)',
+    'rgb(137, 6, 243)',
+    'rgba(100, 149, 237, 1)'
+];
+    const chartConfig = {
+        type: 'line',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: fieldLabels["temp"],
+                data: allData["temp"],
+                borderColor: 'rgba(75, 192, 192, 1)',
+                fill: false,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
+                    }
+                }
+            }
+        }
+    };
+
+    const forecastChart = new Chart(document.getElementById('forecastChart'), chartConfig);
+
+    document.getElementById('forecastFieldSelector').addEventListener('change', function () {
+        const selected = this.value;
+        const selectedIndex = Object.keys(allData).indexOf(selected);
+        forecastChart.data.datasets[0].label = fieldLabels[selected];
+        forecastChart.data.datasets[0].data = allData[selected];
+        forecastChart.data.datasets[0].borderColor = colors[selectedIndex % colors.length];
+        forecastChart.update();
+    });
+</script>
+
+
+{% endblock %}

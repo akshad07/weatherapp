@@ -87,7 +87,7 @@
                                     <td>{{ location.created_at|date:"Y-m-d H:i" }}</td>
                                     <td>
                                         <div class="btn-group btn-group-sm">
-                                            <a href="#" class="btn btn-outline-primary">
+                                            <a href="/locations/detail/{{ location.id }}/" class="btn btn-outline-primary">
                                                 <i class="fas fa-eye"></i>
                                             </a>
                                             <a href="#" class="btn btn-outline-danger" data-bs-toggle="modal"
@@ -104,7 +104,7 @@
                                 <tr id="noAoisRow">
                                     <td colspan="4" class="text-center py-4">
                                         <p class="mb-0 text-muted">You haven't added any locations yet.</p>
-                                        <a href="#" class="btn btn-sm btn-primary mt-2">
+                                        <a href="{% url 'add_location' %}" class="btn btn-sm btn-primary mt-2">
                                             <i class="fas fa-plus-circle me-1"></i> Add Your First Location
                                         </a>
                                     </td>

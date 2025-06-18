@@ -1,7 +1,8 @@
 import requests
 from .models import WeatherForecast
 from django.conf import settings
-
+from datetime import datetime
+from django.utils.timezone import get_current_timezone
 
 def fetch_and_store_forecast(lat, lon, location):
     """
@@ -45,12 +46,9 @@ def fetch_and_store_forecast(lat, lon, location):
 
 
 def get_current_weather(lat, lon):
-    """
-    Fetch and return formatted current weather data from OpenWeatherMap for given lat/lon.
-    """
     api_key = settings.WEATHER_API_KEY
     url = "https://api.openweathermap.org/data/2.5/weather"
-    
+
     params = {
         'lat': lat,
         'lon': lon,
@@ -61,11 +59,23 @@ def get_current_weather(lat, lon):
     try:
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
+        print("Request URL:", response.url)
+
         data = response.json()
 
-        # Extract & format key details
+        tz = get_current_timezone()
+
+        sunrise_unix = data["sys"].get("sunrise")
+        sunset_unix = data["sys"].get("sunset")
+        print("sunrise_unix :",sunrise_unix)
+        print("sunset_unix :",sunset_unix)
+
+        # Handle None or 0 safely
+        sunrise_str = datetime.fromtimestamp(sunrise_unix, tz).strftime('%H:%M') if sunrise_unix else "N/A"
+        sunset_str = datetime.fromtimestamp(sunset_unix, tz).strftime('%H:%M') if sunset_unix else "N/A"
+
         return {
-            "city": data.get("name"),
+            "city": data.get("name", "Unknown"),
             "datetime": data.get("dt"),
             "temperature": data["main"]["temp"],
             "feels_like": data["main"]["feels_like"],
@@ -80,10 +90,11 @@ def get_current_weather(lat, lon):
             "wind_speed": data["wind"]["speed"],
             "wind_deg": data["wind"]["deg"],
             "visibility": data.get("visibility"),
-            "sunrise": data["sys"].get("sunrise"),
-            "sunset": data["sys"].get("sunset"),
+            "sunrise": sunrise_str,
+            "sunset": sunset_str,
         }
 
     except requests.RequestException as e:
         print(f"Error fetching weather data: {e}")
         return None
+
