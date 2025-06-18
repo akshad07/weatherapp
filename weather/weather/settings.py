@@ -150,35 +150,11 @@ assert os.path.exists(GDAL_LIBRARY_PATH), f"GDAL library not found at path: {GDA
 
 
 # Celery settings
-
 CELERY_TIMEZONE = 'Asia/Kolkata'
-CELERY_ENABLE_UTC = True
+CELERY_ENABLE_UTC = False
 CELERY_BEAT_SCHEDULER = "django_celery_beat.schedulers.DatabaseScheduler"
-
-CELERY_TASK_RESULT_EXPIRES = 3600  # 1 hour
 CELERY_BROKER_URL = env('CELERY_BROKER_URL', default='redis://redis:6379/0')
 CELERY_RESULT_BACKEND = env('CELERY_RESULT_BACKEND', default='redis://redis:6379/1')
+CELERY_TASK_ACKS_LATE = True
+CELERY_IMPORTS = ("mainapp.celery_task",)
 
-# Improved Celery settings for stability
-CELERY_BROKER_HEARTBEAT = 5  # Reduced from 10 to detect connection issues faster
-CELERY_BROKER_CONNECTION_TIMEOUT = 30  # Reduced to avoid long blocking operations
-CELERY_BROKER_CONNECTION_RETRY = True
-CELERY_BROKER_CONNECTION_MAX_RETRIES = 10  # Reduced to fail faster and retry at task level
-CELERY_WORKER_PREFETCH_MULTIPLIER = 1  # Prevents worker from prefetching too many tasks
-CELERY_WORKER_MAX_TASKS_PER_CHILD = 20  # Restart worker more frequently to prevent memory leaks
-CELERY_TASK_TIME_LIMIT = 180  # 3 minutes max task runtime (reduced from 10 minutes)
-CELERY_TASK_SOFT_TIME_LIMIT = 150  # 2.5 minutes soft limit
-CELERY_REDIS_MAX_CONNECTIONS = 10  # Reduced Redis connections
-CELERY_TASK_ACKS_LATE = True  # Only acknowledge tasks after they are completed
-CELERY_WORKER_CONCURRENCY = 2  # Limit concurrent tasks
-CELERY_WORKER_SEND_TASK_EVENTS = True  # Enable task events
-CELERY_TASK_SEND_SENT_EVENT = True  # Track when tasks are sent
-CELERY_BROKER_TRANSPORT_OPTIONS = {
-    'visibility_timeout': 3600,  # 1 hour
-    'socket_timeout': 300,  # 30 seconds socket timeout
-    'socket_connect_timeout': 300,  # 30 seconds socket connect timeout
-    'socket_keepalive': True,  # Enable TCP keepalive
-}
-
-# Celery imports
-# CELERY_IMPORTS = ("stac.celery_tasks",)
