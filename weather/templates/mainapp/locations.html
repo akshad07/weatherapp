@@ -5,9 +5,23 @@
 {% block title %}Weather Map{% endblock %}
 
 {% block extra_head %}
+<style>
+    .back-button {
+        position: fixed;
+        top: 60px;
+        left: 20px;
+        z-index: 2000;
+        padding: 8px 16px;
+        font-size: 16px;
+        border-radius: 8px;
+    }
+</style>
 {% endblock %}
 
 {% block content %}
+<a href="{% url 'home' %}" class="btn btn-primary back-button">
+    ← Back
+</a>
 <div class="container-fluid pt-2">
     <div class="row">
         <!-- Main Content -->

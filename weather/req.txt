@@ -6,6 +6,7 @@ django-widget-tweaks==1.5.0
 djangorestframework==3.16.0
 djangorestframework-gis==1.2.0
 django-celery-beat
+drf-yasg
 psycopg==3.2.9
 psycopg-binary==3.2.9
 sqlparse==0.5.3

@@ -1,16 +1,20 @@
 {% extends 'base.html' %}
+{% load widget_tweaks %}
 
-{% block title %}Register{% endblock %}
+{% block title %}Sign up{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow">
-            <div class="card-header bg-primary text-white">
-                <h3 class="text-center mb-0">Create an Account</h3>
-            </div>
-            <div class="card-body">
-                {% if messages %}
+<!-- Full-page Background Section with padding for navbar -->
+ <section class="min-vh-100 d-flex align-items-center" style="background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)),  url('https://images.unsplash.com/photo-1506748686214-e9df14d4d9d0?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80'); background-size: cover; background-position: center;">
+
+    <div class="container">
+        <div class="row">
+            <!-- Form Column (appears first on mobile) -->
+            <div class="col-lg-6 order-1 order-lg-2 mb-1 mb-lg-0" data-aos="fade-left">
+                <div class="card border-0 shadow-lg">
+                    <div class="card-body p-4 p-md-5">
+                        <h2 class="fw-bold mb-4">Create an Account</h2>
+                                        {% if messages %}
                     {% for message in messages %}
                         <div class="alert alert-{{ message.tags }}">
                             {{ message }}
@@ -24,26 +28,16 @@
                     <div class="mb-3">
                         <label for="id_username" class="form-label">Username</label>
                         <input type="text" name="username" maxlength="150" id="id_username" class="form-control" required>
-                        <div class="form-text">Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.</div>
                     </div>
                     
                     <div class="mb-3">
                         <label for="id_password1" class="form-label">Password</label>
                         <input type="password" name="password1" id="id_password1" class="form-control" required>
-                        <div class="form-text">
-                            <ul>
-                                <li>Your password can't be too similar to your other personal information.</li>
-                                <li>Your password must contain at least 8 characters.</li>
-                                <li>Your password can't be a commonly used password.</li>
-                                <li>Your password can't be entirely numeric.</li>
-                            </ul>
-                        </div>
                     </div>
                     
                     <div class="mb-3">
-                        <label for="id_password2" class="form-label">Password confirmation</label>
+                        <label for="id_password2" class="form-label">Confirm Password</label>
                         <input type="password" name="password2" id="id_password2" class="form-control" required>
-                        <div class="form-text">Enter the same password as before, for verification.</div>
                     </div>
                     
                     <div class="d-grid gap-2">
@@ -55,8 +49,59 @@
                 <div class="text-center">
                     <p>Already have an account? <a href="{% url 'login' %}">Login here</a></p>
                 </div>
+
+                    </div>
+                </div>
+                
             </div>
+            
+
+            <!-- Information Column (appears second on mobile) -->
+<div class="col-lg-6 order-2 order-lg-1 text-white" data-aos="fade-right">
+    <div class="pe-lg-5">
+        <h1 class="display-4 fw-bold mb-4">Welcome to Weatherapp</h1>
+        <p class="lead mb-4">Stay informed and plan your day with accurate, real-time weather updates across the globe.</p>
+
+        <div class="mb-5">
+            <h4 class="fw-bold mb-3">Why Choose Us?</h4>
+            <ul class="list-unstyled">
+                <li class="mb-3">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <span class="badge rounded-circle bg-primary p-2"><i class="fas fa-globe"></i></span>
+                        </div>
+                        <div>
+                            <p class="mb-0">Track current weather in any location worldwide with precision.</p>
+                        </div>
+                    </div>
+                </li>
+                <li class="mb-3">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <span class="badge rounded-circle bg-primary p-2"><i class="fas fa-sync-alt"></i></span>
+                        </div>
+                        <div>
+                            <p class="mb-0">Get live weather updates refreshed every few minutes.</p>
+                        </div>
+                    </div>
+                </li>
+                <li class="mb-3">
+                    <div class="d-flex">
+                        <div class="me-3">
+                            <span class="badge rounded-circle bg-primary p-2"><i class="fas fa-code"></i></span>
+                        </div>
+                        <div>
+                            <p class="mb-0">Integrate our powerful weather API into your own applications.</p>
+                        </div>
+                    </div>
+                </li>
+            </ul>
         </div>
+
     </div>
 </div>
+
+        </div>
+    </div>
+</section>
 {% endblock %}

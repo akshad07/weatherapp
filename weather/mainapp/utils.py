@@ -98,3 +98,90 @@ def get_current_weather(lat, lon):
         print(f"Error fetching weather data: {e}")
         return None
 
+
+def format_forecast_response(location, forecasts):
+    forecast_list = []
+
+    for forecast in forecasts:
+        forecast_list.append({
+            "dt": int(forecast.datetime.timestamp()),
+            "main": {
+                "temp": forecast.temp,
+                "feels_like": forecast.feels_like,
+                "temp_min": forecast.temp_min,
+                "temp_max": forecast.temp_max,
+                "pressure": forecast.pressure,
+                "humidity": forecast.humidity,
+            },
+            "weather": [
+                {
+                    "main": forecast.weather_main,
+                    "description": forecast.weather_description,
+                    "icon": forecast.icon
+                }
+            ],
+            "clouds": {
+                "all": forecast.clouds
+            },
+            "wind": {
+                "speed": forecast.wind_speed,
+                "deg": forecast.wind_deg
+            },
+            "visibility": forecast.visibility,
+            "pop": forecast.pop,
+            "rain": {
+                "3h": forecast.rain_3h
+            } if forecast.rain_3h is not None else {},
+            "dt_txt": forecast.datetime.strftime("%Y-%m-%d %H:%M:%S")
+        })
+
+    return {
+        "cod": "200",
+        "message": 0,
+        "cnt": len(forecast_list),
+        "list": forecast_list,
+        "city": {
+            "id": location.id,
+            "name": location.name,
+            "coord": {
+                "lat": location.point.y,
+                "lon": location.point.x
+            },
+            "country": "IN"
+        }
+    }
+
+def get_current_weather_data(lat, lon):
+    api_key = settings.WEATHER_API_KEY
+    url = "https://api.openweathermap.org/data/2.5/weather"
+
+    params = {
+        'lat': lat,
+        'lon': lon,
+        'appid': api_key,
+        'units': 'metric'
+    }
+
+    try:
+        response = requests.get(url, params=params, timeout=10)
+        response.raise_for_status()
+        return response.json()
+        
+    except requests.RequestException as e:
+        print(f"Error fetching weather data: {e}")
+        return None
+
+def fetch_forecast_data(lat, lon):
+    """
+    Fetch forecast data from OpenWeatherMap for the given location and save it.
+    """
+    api_key = settings.WEATHER_API_KEY
+    url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={api_key}&units=metric"
+    response = requests.get(url)
+
+    if response.status_code != 200:
+        print(f"Failed to fetch forecast: {response.status_code}")
+        return
+
+    return response.json()
+
