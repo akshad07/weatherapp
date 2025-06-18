@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:8000"
+      - "7500:7500"
     volumes:
       - .:/app
       - static_volume:/app/staticfiles
