@@ -12,6 +12,7 @@ services:
       - static_volume:/app/staticfiles
     depends_on:
       - db
+      - redis  # <-- Add Redis here
     env_file:
       - .env
     command: ["sh", "-c", "python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000"]
@@ -32,6 +33,15 @@ services:
       timeout: 5s
       retries: 5
 
+  redis: 
+    image: redis:7-alpine
+    ports:
+      - "6666:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
 volumes:
   static_volume:
   postgres_data:
+  redis_data:

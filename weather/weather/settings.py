@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     "rest_framework",
     "rest_framework_gis",
      "widget_tweaks",
+     "django_celery_beat",
     "accounts",
     "mainapp",
 ]
