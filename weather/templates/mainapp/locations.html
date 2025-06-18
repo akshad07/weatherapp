@@ -1,0 +1,165 @@
+{% extends 'base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+
+{% block title %}Weather Map{% endblock %}
+
+{% block extra_head %}
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid pt-2">
+    <div class="row">
+        <!-- Main Content -->
+        <div class="col-lg-12">
+            <div class="d-flex justify-content-end mb-4">
+                <a href="{% url 'add_location' %}" class="btn btn-primary">
+                    <i class="fas fa-plus-circle me-2"></i> Add New Location
+                </a>
+            </div>
+
+
+            <!-- Stats Cards -->
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <i class="fas fa-map-marked-alt fa-2x text-primary"></i>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="text-muted mb-0">Total Locations</h6>
+                                    <h2 class="mb-0">{{locations_count}}</h2>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <div class="d-flex flex-column">
+                                <div class="d-flex align-items-center mb-2">
+                                    <div class="flex-shrink-0">
+                                        <i class="fas fa-key fa-2x text-warning"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h6 class="text-muted mb-1">API Key</h6>
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="apiKeyInput"
+                                                value="{{ request.user.profile.api_key }}" readonly>
+                                            <button class="btn btn-outline-secondary" type="button"
+                                                onclick="copyApiKey()">Copy</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- AOI Table -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-white">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">Your Locations of Interest</h5>
+
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="aoiTableBody">
+                                {% if locations %}
+                                {% for location in locations %}
+                                <tr>
+                                    <td>{{ location.name }}</td>
+                                    <td>{{ location.created_at|date:"Y-m-d H:i" }}</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="#" class="btn btn-outline-primary">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="#" class="btn btn-outline-danger" data-bs-toggle="modal"
+                                                data-bs-target="#deleteModal" data-location-id="{{ location.id }}"
+                                                data-location-name="{{ location.name }}">
+                                                <i class="fas fa-trash-alt"></i>                                          </a>
+
+
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                {% else %}
+                                <tr id="noAoisRow">
+                                    <td colspan="4" class="text-center py-4">
+                                        <p class="mb-0 text-muted">You haven't added any locations yet.</p>
+                                        <a href="#" class="btn btn-sm btn-primary mt-2">
+                                            <i class="fas fa-plus-circle me-1"></i> Add Your First Location
+                                        </a>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Delete Confirmation Modal -->
+            <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel"
+                aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel">Confirm Deletion</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <p>Are you sure you want to delete the AOI "<span id="deleteAoiName"></span>"?</p>
+                            <p class="text-danger">This action cannot be undone.</p>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="button" id="confirmDeleteBtn" class="btn btn-danger">Delete</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let deleteLocationId = null;
+
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget;
+        const locationId = button.getAttribute('data-location-id');
+        const locationName = button.getAttribute('data-location-name');
+
+        document.getElementById('deleteAoiName').textContent = locationName;
+        deleteLocationId = locationId;
+    });
+
+    document.getElementById('confirmDeleteBtn').addEventListener('click', function () {
+        if (deleteLocationId) {
+            const deleteUrl = `/locations/delete_location/${deleteLocationId}/`;  // Adjust if you use named URLs
+            window.location.href = deleteUrl;
+        }
+    });
+</script>
+
+{% endblock content %}
