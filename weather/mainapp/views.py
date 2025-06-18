@@ -74,47 +74,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
-
-# Header param
-x_api_key_header = openapi.Parameter(
-    name='X-API-Key',
-    in_=openapi.IN_HEADER,
-    type=openapi.TYPE_STRING,
-    required=True,
-    description='Your API key (UUID format)'
-)
-
-location_id = openapi.Parameter(
-                'id',
-                openapi.IN_QUERY,
-                description="UUID of the location to delete",
-                type=openapi.TYPE_STRING,
-                format=openapi.FORMAT_UUID,
-                required=True
-            )
-
-lat_param = openapi.Parameter(
-    name='latitude',
-    in_=openapi.IN_QUERY,
-    description="Latitude of the location",
-    type=openapi.TYPE_NUMBER,
-    required=True
-)
-
-lon_param = openapi.Parameter(
-    name='longitude',
-    in_=openapi.IN_QUERY,
-    description="Longitude of the location",
-    type=openapi.TYPE_NUMBER,
-    required=True
-)
-
-# Security declaration (optional but useful)
-api_key_security = [{'X-API-Key': []}]
-
-# Aliases for OpenAPI Types
-OpenAPIType = openapi.TYPE_OBJECT
-OpenAPIFormat = openapi.FORMAT_DATE
+from .swagger import *
 
 class LocationAPIView(APIView):
     authentication_classes = [APIKeyAuthentication]
@@ -131,36 +91,11 @@ class LocationAPIView(APIView):
         """,
         manual_parameters=[x_api_key_header],
         responses={
-            200: openapi.Response(
-                description='List of Locations',
-                schema=openapi.Schema(
-                    type=openapi.TYPE_OBJECT,
-                    properties={
-                        'type': openapi.Schema(type=openapi.TYPE_STRING, description='FeatureCollection'),
-                        'features': openapi.Schema(
-                            type=openapi.TYPE_ARRAY,
-                            items=openapi.Schema(
-                                type=openapi.TYPE_OBJECT,
-                                properties={
-                                    'type': openapi.Schema(type=openapi.TYPE_STRING, description='Feature'),
-                                    'geometry': openapi.Schema(
-                                        type=openapi.TYPE_OBJECT,
-                                        description='GeoJSON geometry'
-                                    ),
-                                    'properties': openapi.Schema(
-                                        type=openapi.TYPE_OBJECT,
-                                        properties={
-                                            'id': openapi.Schema(type=openapi.TYPE_STRING, format=openapi.FORMAT_UUID),
-                                            'name': openapi.Schema(type=openapi.TYPE_STRING),
-                                            'created_at': openapi.Schema(type=openapi.TYPE_STRING, format='date-time')
-                                        }
-                                    )
-                                }
-                            )
-                        )
-                    }
-                )
-            )
+            200: location_list,
+            400: 'Bad Request',
+            401: 'Unauthorized',
+            403: 'Forbidden',
+            500: 'Internal Server Error'
         },
         security=api_key_security
     )
@@ -212,7 +147,11 @@ class LocationAPIView(APIView):
                         'created_at': openapi.Schema(type=openapi.TYPE_STRING, format='date-time'),
                     }
                 )
-            )
+            ),
+            400: 'Bad Request',
+            401: 'Unauthorized',
+            403: 'Forbidden',
+            500: 'Internal Server Error'
         },
         security=api_key_security
     )
@@ -247,6 +186,11 @@ class LocationAPIView(APIView):
         ],
         responses={
             204: openapi.Response(description='Location deleted successfully'),
+            400: 'Bad Request',
+            401: 'Unauthorized',
+            403: 'Forbidden',
+            404: 'Not Found',
+            500: 'Internal Server Error'
         },
         security=api_key_security
     )
@@ -267,6 +211,14 @@ class LocationCurrentWeatherAPI(APIView):
     @swagger_auto_schema(
         operation_description="Get current weather for a location by ID.",
         manual_parameters=[x_api_key_header,location_id],
+        responses={
+            200: CurrentWeatherSchema,
+            400: 'Bad Request',
+            401: 'Unauthorized',
+            403: 'Forbidden',
+            404: 'Not Found',
+            500: 'Internal Server Error'
+        },   
     )
     def get(self, request):
         """Get current weather for a specific location."""
@@ -285,7 +237,16 @@ class LocationForecastWeatherAPI(APIView):
     @swagger_auto_schema(
         operation_description="Get weather forecast for a location by ID.",
         manual_parameters=[x_api_key_header,location_id],
+        responses={
+            200: ForecastWeatherSchema,
+            400: 'Bad Request',
+            401: 'Unauthorized',
+            403: 'Forbidden',
+            404: 'Not Found',
+            500: 'Internal Server Error'
+        },
     )
+
     def get(self, request):
         location_id = request.query_params.get('id')
         location = get_object_or_404(Location, id=location_id, user=request.user)
@@ -303,7 +264,15 @@ class PublicCurrentWeatherAPI(APIView):
 
     @swagger_auto_schema(
         operation_description="Get current weather for a specific latitude and longitude.",
-        manual_parameters=[lat_param, lon_param]
+        manual_parameters=[lat_param, lon_param],
+        responses={
+            200: CurrentWeatherSchema,
+            400: 'Bad Request',
+            401: 'Unauthorized',
+            403: 'Forbidden',
+            404: 'Not Found',
+            500: 'Internal Server Error'
+        }
     )
     def get(self, request):
         """Get current weather for a specific latitude and longitude."""
@@ -324,7 +293,15 @@ class PublicForecastWeatherAPI(APIView):
 
     @swagger_auto_schema(
         operation_description="Get weather forecast for a specific latitude and longitude.",
-        manual_parameters=[lat_param, lon_param]
+        manual_parameters=[lat_param, lon_param],
+        responses={
+            200: ForecastWeatherSchema,
+            400: 'Bad Request',
+            401: 'Unauthorized',
+            403: 'Forbidden',
+            404: 'Not Found',
+            500: 'Internal Server Error'
+        }
     )
     def get(self, request):
         """Get weather forecast for a specific latitude and longitude."""
