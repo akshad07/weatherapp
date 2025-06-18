@@ -12,10 +12,36 @@ services:
       - static_volume:/app/staticfiles
     depends_on:
       - db
-      - redis  # <-- Add Redis here
+      - redis
     env_file:
       - .env
     command: ["sh", "-c", "python3 manage.py migrate && python3 manage.py runserver 0.0.0.0:8000"]
+
+  celery:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A weather worker --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - web
+      - redis
+    env_file:
+      - .env
+
+  celery-beat:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: celery -A weather beat --loglevel=info
+    volumes:
+      - .:/app
+    depends_on:
+      - web
+      - redis
+    env_file:
+      - .env
 
   db:
     image: postgis/postgis:15-3.3
