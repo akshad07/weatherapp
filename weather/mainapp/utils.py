@@ -4,7 +4,7 @@ from django.conf import settings
 from datetime import datetime
 from django.utils.timezone import get_current_timezone
 
-def fetch_and_store_forecast(lon, lat, location):
+def fetch_and_store_forecast(lat, lon, location):
     """
     Fetch forecast data from OpenWeatherMap for the given location and save it.
     """

@@ -22,7 +22,7 @@ location_id = openapi.Parameter(
 lat_param = openapi.Parameter(
     name='latitude',
     in_=openapi.IN_QUERY,
-    description="Latitude of the location",
+    description="Latitude of the location eg: 20.00404270370521",
     type=openapi.TYPE_NUMBER,
     required=True
 )
@@ -30,7 +30,7 @@ lat_param = openapi.Parameter(
 lon_param = openapi.Parameter(
     name='longitude',
     in_=openapi.IN_QUERY,
-    description="Longitude of the location",
+    description="Longitude of the location eg: 73.79459469473471",
     type=openapi.TYPE_NUMBER,
     required=True
 )

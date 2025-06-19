@@ -49,7 +49,6 @@ def get_location(request, location_id):
     location = get_object_or_404(Location, id=location_id, user=request.user)
     lat, lon = location.point.x, location.point.y
     current_data = get_current_weather(lat, lon)
-    print(current_data)
     forecast_data = WeatherForecast.objects.filter(location=location)
     context = {
         'location': location,
@@ -282,7 +281,7 @@ class PublicCurrentWeatherAPI(APIView):
         if not latitude or not longitude:
             return Response({"detail": "Latitude and longitude are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        current_data = get_current_weather_data(latitude, longitude)
+        current_data = get_current_weather_data(longitude, latitude)
         if not current_data:
             return Response({"detail": "Could not fetch current weather data."}, status=status.HTTP_404_NOT_FOUND)
 
@@ -311,7 +310,7 @@ class PublicForecastWeatherAPI(APIView):
         if not latitude or not longitude:
             return Response({"detail": "Latitude and longitude are required."}, status=status.HTTP_400_BAD_REQUEST)
 
-        forecasts = fetch_forecast_data(latitude, longitude)
+        forecasts = fetch_forecast_data(longitude, latitude)
         if not forecasts:
             return Response({"detail": "Could not fetch weather forecast data."}, status=status.HTTP_404_NOT_FOUND)
 
