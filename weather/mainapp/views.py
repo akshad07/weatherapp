@@ -2,7 +2,18 @@ from django.shortcuts import render, redirect, get_object_or_404
 from .models import Location, WeatherForecast
 from .utils import fetch_and_store_forecast, get_current_weather, format_forecast_response, get_current_weather_data,fetch_forecast_data
 from django.contrib.auth.decorators import login_required
-
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status, permissions
+from .serializers import LocationSerializer
+from .authentication import APIKeyAuthentication
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.permissions import AllowAny
+from .swagger import *
 
 def weathermap(request):
     """Render the weather map page.
@@ -62,18 +73,6 @@ def get_location(request, location_id):
 
 #_________________APIENDPOINTS_____________________#
 
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status, permissions
-from .serializers import LocationSerializer
-from .authentication import APIKeyAuthentication
-from drf_yasg.utils import swagger_auto_schema
-from drf_yasg import openapi
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.permissions import AllowAny
-from .swagger import *
 
 class LocationAPIView(APIView):
     authentication_classes = [APIKeyAuthentication]
