@@ -100,56 +100,41 @@ def get_current_weather(lon, lat):
 
 
 def format_forecast_response(location, forecasts):
-    forecast_list = []
+    simplified_data = []
 
     for forecast in forecasts:
-        forecast_list.append({
-            "dt": int(forecast.datetime.timestamp()),
-            "main": {
-                "temp": forecast.temp,
-                "feels_like": forecast.feels_like,
-                "temp_min": forecast.temp_min,
-                "temp_max": forecast.temp_max,
-                "pressure": forecast.pressure,
-                "humidity": forecast.humidity,
+        simplified_data.append({
+            "timestamp": int(forecast.datetime.timestamp()),
+            "temperature": {
+                "current": forecast.temp,
+                "min": forecast.temp_min,
+                "max": forecast.temp_max
             },
-            "weather": [
-                {
-                    "main": forecast.weather_main,
-                    "description": forecast.weather_description,
-                    "icon": forecast.icon
-                }
-            ],
-            "clouds": {
-                "all": forecast.clouds
-            },
+            "feels_like": forecast.feels_like,
+            "condition": forecast.weather_main,
+            "description": forecast.weather_description,
+            "humidity": forecast.humidity,
             "wind": {
-                "speed": forecast.wind_speed,
-                "deg": forecast.wind_deg
+                "speed_kmh": forecast.wind_speed * 3.6,  # optional: convert to km/h
+                "direction_deg": forecast.wind_deg
             },
-            "visibility": forecast.visibility,
-            "pop": forecast.pop,
-            "rain": {
-                "3h": forecast.rain_3h
-            } if forecast.rain_3h is not None else {},
-            "dt_txt": forecast.datetime.strftime("%Y-%m-%d %H:%M:%S")
+            "cloudiness_percent": forecast.clouds,
+            "rain_mm": forecast.rain_3h or 0,
+            "datetime": forecast.datetime.strftime("%Y-%m-%d %H:%M")
         })
 
     return {
-        "cod": "200",
-        "message": 0,
-        "cnt": len(forecast_list),
-        "list": forecast_list,
-        "city": {
+        "location": {
             "id": location.id,
             "name": location.name,
-            "coord": {
+            "coordinates": {
                 "lat": location.point.y,
                 "lon": location.point.x
-            },
-            "country": "IN"
-        }
+            }
+        },
+        "forecasts": simplified_data
     }
+
 
 def get_current_weather_data(lon, lat):
     api_key = settings.WEATHER_API_KEY
@@ -165,23 +150,97 @@ def get_current_weather_data(lon, lat):
     try:
         response = requests.get(url, params=params, timeout=10)
         response.raise_for_status()
-        return response.json()
-        
+        data = response.json()
     except requests.RequestException as e:
         print(f"Error fetching weather data: {e}")
         return None
 
+    weather = data.get("weather", [{}])[0]
+    rain = data.get("rain", {}).get("1h", 0) or 0
+
+    return {
+        "location": {
+            "id": data.get("id"),
+            "name": data.get("name"),
+            "coordinates": {
+                "lat": data.get("coord", {}).get("lat"),
+                "lon": data.get("coord", {}).get("lon")
+            }
+        },
+        "weather": {
+            "timestamp": data.get("dt"),
+            "temperature": {
+                "current": data["main"]["temp"],
+                "min": data["main"].get("temp_min"),
+                "max": data["main"].get("temp_max")
+            },
+            "feels_like": data["main"]["feels_like"],
+            "condition": weather.get("main"),
+            "description": weather.get("description"),
+            "humidity": data["main"]["humidity"],
+            "wind": {
+                "speed_kmh": data["wind"]["speed"] * 3.6,
+                "direction_deg": data["wind"].get("deg")
+            },
+            "cloudiness_percent": data.get("clouds", {}).get("all"),
+            "rain_mm": rain,
+            "datetime": datetime.fromtimestamp(data["dt"]).strftime("%Y-%m-%d %H:%M")
+        }
+    }
+
 def fetch_forecast_data(lon, lat):
     """
-    Fetch forecast data from OpenWeatherMap for the given location and save it.
+    Fetch and format forecast data from OpenWeatherMap.
     """
     api_key = settings.WEATHER_API_KEY
     url = f"https://api.openweathermap.org/data/2.5/forecast?lat={lat}&lon={lon}&appid={api_key}&units=metric"
-    response = requests.get(url)
 
-    if response.status_code != 200:
-        print(f"Failed to fetch forecast: {response.status_code}")
-        return
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        raw_data = response.json()
+    except requests.RequestException as e:
+        print(f"Error fetching forecast data: {e}")
+        return None
 
-    return response.json()
+    city_info = raw_data.get("city", {})
+    forecasts = raw_data.get("list", [])
+
+    custom_forecast_list = []
+    for item in forecasts:
+        weather = item.get("weather", [{}])[0]
+        rain_3h = item.get("rain", {}).get("3h", 0)
+
+        custom_forecast_list.append({
+            "timestamp": item.get("dt"),
+            "temperature": {
+                "current": item["main"]["temp"],
+                "min": item["main"]["temp_min"],
+                "max": item["main"]["temp_max"]
+            },
+            "feels_like": item["main"]["feels_like"],
+            "condition": weather.get("main"),
+            "description": weather.get("description"),
+            "humidity": item["main"]["humidity"],
+            "wind": {
+                "speed_kmh": item["wind"]["speed"] * 3.6,
+                "direction_deg": item["wind"].get("deg")
+            },
+            "cloudiness_percent": item["clouds"]["all"],
+            "rain_mm": rain_3h,
+            "datetime": datetime.strptime(item["dt_txt"], "%Y-%m-%d %H:%M:%S").strftime("%Y-%m-%d %H:%M")
+        })
+
+    return {
+        "location": {
+            "id": city_info.get("id"),
+            "name": city_info.get("name"),
+            "coordinates": {
+                "lat": city_info.get("coord", {}).get("lat"),
+                "lon": city_info.get("coord", {}).get("lon")
+            }
+        },
+        "forecasts": custom_forecast_list
+    }
+
 
