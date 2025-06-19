@@ -4,7 +4,7 @@ from django.conf import settings
 from datetime import datetime
 from django.utils.timezone import get_current_timezone
 
-def fetch_and_store_forecast(lat, lon, location):
+def fetch_and_store_forecast(lon, lat, location):
     """
     Fetch forecast data from OpenWeatherMap for the given location and save it.
     """
@@ -45,7 +45,7 @@ def fetch_and_store_forecast(lat, lon, location):
         )
 
 
-def get_current_weather(lat, lon):
+def get_current_weather(lon, lat):
     api_key = settings.WEATHER_API_KEY
     url = "https://api.openweathermap.org/data/2.5/weather"
 
@@ -151,7 +151,7 @@ def format_forecast_response(location, forecasts):
         }
     }
 
-def get_current_weather_data(lat, lon):
+def get_current_weather_data(lon, lat):
     api_key = settings.WEATHER_API_KEY
     url = "https://api.openweathermap.org/data/2.5/weather"
 
@@ -171,7 +171,7 @@ def get_current_weather_data(lat, lon):
         print(f"Error fetching weather data: {e}")
         return None
 
-def fetch_forecast_data(lat, lon):
+def fetch_forecast_data(lon, lat):
     """
     Fetch forecast data from OpenWeatherMap for the given location and save it.
     """
