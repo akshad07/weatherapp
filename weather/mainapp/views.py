@@ -14,6 +14,7 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import AllowAny
 from .swagger import *
+from rest_framework.permissions import IsAuthenticated
 
 def weathermap(request):
     """Render the weather map page.
@@ -76,6 +77,7 @@ def get_location(request, location_id):
 
 class LocationAPIView(APIView):
     authentication_classes = [APIKeyAuthentication]
+    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_description="""
@@ -205,7 +207,8 @@ class LocationAPIView(APIView):
 
 class LocationCurrentWeatherAPI(APIView):
     authentication_classes = [APIKeyAuthentication]
-
+    permission_classes = [IsAuthenticated]
+    
     @swagger_auto_schema(
         operation_description="Get current weather for a location by ID.",
         manual_parameters=[x_api_key_header,location_id],
@@ -231,6 +234,7 @@ class LocationCurrentWeatherAPI(APIView):
 
 class LocationForecastWeatherAPI(APIView):
     authentication_classes = [APIKeyAuthentication]
+    permission_classes = [IsAuthenticated]
 
     @swagger_auto_schema(
         operation_description="Get weather forecast for a location by ID.",
